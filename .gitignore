@@ -1,0 +1,11 @@
+# Ignore all image files in the data and temp folders
+/data/
+/temp/
+*.png
+*.jpg
+*.jpeg
+*.tif
+*.tiff
+*.bmp
+*.gif
+*.zip
