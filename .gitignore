@@ -1,11 +1,81 @@
-# Ignore all image files in the data and temp folders
+# ── Python ───────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+backend/venv/
+backend/.venv/
+env/
+ENV/
+
+# Packaging / build
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ── Node / Next.js ───────────────────────────────────────────────────────
+node_modules/
+.next/
+out/
+.npm/
+.pnpm-debug.log*
+.yarn/
+*.tsbuildinfo
+next-env.d.ts
+
+# ── IDE / Editor ─────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Claude / Sisyphus / Agent tooling ────────────────────────────────────
+.sisyphus/
+.claude/settings.local.json
+
+# ── Runtime data / outputs (don't commit) ────────────────────────────────
+# Original Kaggle dataset (huge, downloaded separately)
 /data/
+# Streamlit temp uploads
 /temp/
-*.png
-*.jpg
-*.jpeg
-*.tif
-*.tiff
-*.bmp
-*.gif
+# FastAPI uploads (per-user images, runtime state)
+/backend/uploads/
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+# Trained model weights + metrics (regeneratable from training UI)
+/backend/ml/weights/
+# MedMNIST cache
+.medmnist/
+
+# ── Large model files ────────────────────────────────────────────────────
+*.h5
+*.pth
+*.onnx
+*.pkl
+*.ckpt
+
+# ── Images / binary outputs ──────────────────────────────────────────────
+# (results dir keeps app outputs out of git; keep narrow so docs/screenshots elsewhere stay tracked)
+/results/
 *.zip
+
+# ── Misc ─────────────────────────────────────────────────────────────────
+*.log
+.env
+.env.local
+.env.*.local
+opencode.json

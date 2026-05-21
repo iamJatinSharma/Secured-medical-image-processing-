@@ -107,30 +107,125 @@ def main():
     st.sidebar.markdown("# 🏥 Navigation")
     
     if not st.session_state.authenticated:
-        page = "Login"
+        page = st.sidebar.radio(
+            "Select Module",
+            ["Login", "User Management"]
+        )
     else:
         page = st.sidebar.radio(
             "Select Module",
-            ["Home", "Image Processing", "Disease Detection", "Security", "Evaluation Metrics"]
+            ["Home", "Image Processing", "Disease Detection", "Security", "Evaluation Metrics", "Explainable AI", "Interactive Visualizations", "Automated Training", "User Management"]
         )
+    # Interactive Visualizations Page
+    if page == "Interactive Visualizations":
+        st.markdown('<h1 class="main-header">📊 Interactive Visualizations</h1>', unsafe_allow_html=True)
+        st.markdown("---")
+        st.markdown("""
+        Visualize model performance with confusion matrix and ROC curve.
+        """)
+        import matplotlib.pyplot as plt
+        from sklearn.metrics import auc, confusion_matrix, roc_curve
+        y_true = st.text_area("True Labels (comma-separated)", "0,1,1,0,1")
+        y_pred = st.text_area("Predicted Labels (comma-separated)", "0,1,0,0,1")
+        y_true = [int(x.strip()) for x in y_true.split(",") if x.strip().isdigit()]
+        y_pred = [int(x.strip()) for x in y_pred.split(",") if x.strip().isdigit()]
+        if st.button("Show Confusion Matrix"):
+            cm = confusion_matrix(y_true, y_pred)
+            fig, ax = plt.subplots()
+            ax.matshow(cm, cmap=plt.cm.Blues, alpha=0.7)
+            for i in range(cm.shape[0]):
+                for j in range(cm.shape[1]):
+                    ax.text(j, i, cm[i, j], va='center', ha='center')
+            plt.xlabel('Predicted')
+            plt.ylabel('True')
+            st.pyplot(fig)
+        if st.button("Show ROC Curve"):
+            if len(set(y_true)) == 2:
+                fpr, tpr, _ = roc_curve(y_true, y_pred)
+                roc_auc = auc(fpr, tpr)
+                fig, ax = plt.subplots()
+                ax.plot(fpr, tpr, color='blue', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+                ax.plot([0, 1], [0, 1], color='gray', lw=1, linestyle='--')
+                plt.xlabel('False Positive Rate')
+                plt.ylabel('True Positive Rate')
+                plt.title('Receiver Operating Characteristic')
+                plt.legend(loc='lower right')
+                st.pyplot(fig)
+            else:
+                st.warning("ROC curve requires binary classification labels.")
+
+    # User Management Page
+    if page == "User Management":
+        st.markdown('<h1 class="main-header">👤 User Management</h1>', unsafe_allow_html=True)
+        st.markdown("---")
+        st.markdown("""
+        Register new users and assign roles.
+        """)
+        if 'users' not in st.session_state:
+            st.session_state.users = {}
+        username = st.text_input("New Username")
+        password = st.text_input("New Password", type="password")
+        role = st.selectbox("Role", ["user", "admin", "doctor", "researcher"])
+        if st.button("Register User"):
+            if username and password:
+                from user_authentication import hash_password
+                st.session_state.users[username] = {
+                    'password': hash_password(password),
+                    'role': role
+                }
+                st.success(f"User '{username}' registered as {role}!")
+            else:
+                st.warning("Please enter username and password.")
+
+    # Automated Training Page
+    if page == "Automated Training":
+        st.markdown('<h1 class="main-header">🤖 Automated Model Training</h1>', unsafe_allow_html=True)
+        st.markdown("---")
+        st.markdown("""
+        Launch a new model training run with custom parameters. This will use the training pipeline and save the best model.
+        """)
+        import importlib
+        train_pipeline = importlib.import_module("train_pipeline")
+        from disease_detection import build_resnet_model
+        data_dir = st.text_input("Data directory", "data/breast-histopathology-images")
+        epochs = st.number_input("Epochs", min_value=1, max_value=100, value=10)
+        batch_size = st.number_input("Batch size", min_value=1, max_value=256, value=32)
+        save_path = st.text_input("Model save path", "models/resnet_model.h5")
+        max_images = st.number_input("Max images (optional, 0=all)", min_value=0, value=0)
+        if st.button("Start Training"):
+            st.info("Training started. Check terminal for progress logs.")
+            model = build_resnet_model(num_classes=2, freeze_base=True)
+            callbacks = None
+            if max_images == 0:
+                max_images = None
+            history = train_pipeline.train_model(
+                data_dir,
+                model,
+                epochs=epochs,
+                batch_size=batch_size,
+                save_path=save_path,
+                max_images=max_images,
+                callbacks=callbacks
+            )
+            st.success(f"Training complete. Best model saved to: {save_path}")
     
     # Login Page
     if page == "Login":
         st.markdown('<h1 class="main-header">🏥 Secure Medical Image Processing</h1>', unsafe_allow_html=True)
         st.markdown("---")
-        
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.markdown("### 🔐 User Authentication")
             username = st.text_input("Username")
             password = st.text_input("Password", type="password")
-            
             if st.button("Login"):
                 if username and password:
-                    # Simple authentication (in production, use proper auth)
-                    hashed = hash_password(password)
-                    if verify_password(hashed, password):
+                    # Check against registered users in session state
+                    users = st.session_state.get('users', {})
+                    user = users.get(username)
+                    if user and verify_password(user['password'], password):
                         st.session_state.authenticated = True
+                        st.session_state.current_user = username
                         st.success("✅ Login successful!")
                         st.rerun()
                     else:
@@ -138,6 +233,30 @@ def main():
                 else:
                     st.warning("Please enter username and password")
     
+    # Explainable AI Page
+    elif page == "Explainable AI":
+        st.markdown('<h1 class="main-header">🧠 Explainable AI (Grad-CAM)</h1>', unsafe_allow_html=True)
+        st.markdown("---")
+        st.markdown("""
+        Visualize model predictions using Grad-CAM for interpretability.
+        """)
+        import os
+
+        from explainable_ai import grad_cam
+
+        # Select image and model
+        image_path = st.text_input("Path to image", "data/breast-histopathology-images/10253/sample.png")
+        model_path = st.text_input("Path to model", "models/resnet_model.h5")
+        layer_name = st.text_input("Layer name for Grad-CAM", "conv5_block3_out")
+        class_index = st.number_input("Class index (e.g. 0=Normal, 1=Cancer)", min_value=0, max_value=10, value=1)
+        if st.button("Generate Grad-CAM Overlay"):
+            if os.path.exists(image_path) and os.path.exists(model_path):
+                overlay = grad_cam(image_path, model_path, layer_name, class_index)
+                st.image(overlay, caption="Grad-CAM Overlay", use_column_width=True)
+                st.success("Grad-CAM visualization generated!")
+            else:
+                st.error("Image or model file not found.")
+
     # Home Page
     elif page == "Home":
         st.markdown('<h1 class="main-header">🏥 Secure Medical Image Processing</h1>', unsafe_allow_html=True)
