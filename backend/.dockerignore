@@ -8,8 +8,6 @@ secure_medical.db
 secure_medical.db-journal
 uploads/*
 !uploads/.gitkeep
-reports/*
-!reports/.gitkeep
 .env
 .env.*
 .git/
