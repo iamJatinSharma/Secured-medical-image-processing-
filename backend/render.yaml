@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: securemed-backend
+    runtime: docker
+    plan: free
+    region: oregon
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://frontend-medishield.vercel.app,https://frontend-421grfc5h-medishield.vercel.app,http://localhost:3000
+      - key: CORS_ORIGIN_REGEX
+        value: ^https://frontend-[a-z0-9]+-medishield\.vercel\.app$
+      - key: DATABASE_URL
+        value: sqlite:///./secure_medical.db
+      - key: PYTHONUNBUFFERED
+        value: "1"

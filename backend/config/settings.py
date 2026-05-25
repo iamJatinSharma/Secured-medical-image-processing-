@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from pathlib import Path
+from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -19,8 +20,14 @@ class Settings(BaseSettings):
     UPLOAD_DIR: Path = Path(__file__).resolve().parent.parent / "uploads"
     MODEL_DIR: Path = Path(__file__).resolve().parent.parent / "ml" / "weights"
 
-    # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    # CORS — accept comma-separated list from env (e.g. "https://a.com,https://b.com")
+    CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+    # Optional regex for matching dynamic preview URLs (Vercel previews etc.)
+    CORS_ORIGIN_REGEX: Optional[str] = None
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
     class Config:
         env_file = ".env"
