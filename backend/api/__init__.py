@@ -9,6 +9,7 @@ from .metrics import router as metrics_router
 from .reports import router as reports_router
 from .training import router as training_router
 from .xai import router as xai_router
+from .admin import router as admin_router
 
 api_router = APIRouter()
 
@@ -21,3 +22,4 @@ api_router.include_router(metrics_router, prefix="/metrics", tags=["Metrics"])
 api_router.include_router(reports_router, prefix="/reports", tags=["Reports"])
 api_router.include_router(training_router, prefix="/training", tags=["Training"])
 api_router.include_router(xai_router, prefix="/xai", tags=["XAI"])
+api_router.include_router(admin_router, prefix="/admin", tags=["Admin"])
